@@ -203,4 +203,7 @@ with tab4:
     3. how to deal with different paper sizes being uploaded?
 
     4. drag to reorder is hiden until files are uploaded.
+
+    5. Fix issue where it does everything as A4. Maybe a selection of page size?
+       Or it recognizes other page sizes? idk.
     """
