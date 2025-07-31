@@ -121,14 +121,21 @@ with tab3:
                 if file.type != 'application/pdf':
                     #print(f"Converted {file.name}")
                     image = Image.open(file).convert("RGB")
-                    a4_canvas = Image.new("RGB", (A4_WIDTH, A4_HEIGHT), "white")
-                    image = ImageOps.contain(image, (A4_WIDTH, A4_HEIGHT))
-                    offset = ((A4_WIDTH - image.width) // 2, (A4_HEIGHT - image.height) // 2)
-                    a4_canvas.paste(image, offset)
+                    img_bytes = BytesIO()
+                    image.save(img_bytes, format="JPEG", quality=95)  # high quality
+                    img_bytes.seek(0)
 
                     pdf_bytes = BytesIO()
-                    a4_canvas.save(pdf_bytes, format="PDF")
+                    pdf_bytes.write(
+                        img2pdf.convert(
+                            img_bytes,
+                            dpi=300,  # adjust as needed
+                            layout_fun=img2pdf.get_layout_fun((img2pdf.mm_to_pt(210), img2pdf.mm_to_pt(297)))  # A4
+                        )
+                    )
                     pdf_bytes.seek(0)
+
+                    
                     processed_files.append((file.name.split(".")[0] + ".pdf", pdf_bytes))
                 else:
                     #print(f"Didn't need to convert {file.name}")
