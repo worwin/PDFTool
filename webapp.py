@@ -3,6 +3,8 @@ from PyPDF2 import PdfMerger
 from io import BytesIO
 from streamlit_sortables import sort_items
 from PIL import Image
+from PIL import ImageOps
+import img2pdf
 
 st.set_page_config(page_title="PDF Merger", layout="centered")
 
@@ -35,7 +37,7 @@ custom_style = """
 # Tab 1: Merge PDFs
 with tab1: 
     #st.header("PDF Merger — Drag to Reorder Uploads")
-
+    
     uploaded_files = st.file_uploader(
         "Upload up to 10 PDFs", type="pdf", accept_multiple_files=True
     )
@@ -48,18 +50,22 @@ with tab1:
             filenames = [f.name for f in uploaded_files]
 
             st.subheader("Drag to reorder PDFs")
-            sorted_names = sort_items(filenames, custom_style=custom_style, direction="horizontal")
+            sort_key = f"tab1_sort_{len(filenames)}_{hash(tuple(filenames))}"
+            sorted_names_t1 = sort_items(filenames, custom_style=custom_style, direction="horizontal", key=sort_key)
+
             
             # Ordere the files
             ordered = []
 
-            for name in sorted_names:
+            for name in sorted_names_t1:
                 for file in uploaded_files:
                     if file.name == name:
                         ordered.append(file)
                         break
 
-            if st.button("Merge"):
+            print(ordered)
+
+            if st.button("Merge0"):
                 merger = PdfMerger()
                 for f in ordered:
                     merger.append(f)
@@ -96,28 +102,70 @@ with tab2:
 # Tab 3: Working on a single page to handle this
 with tab3: 
 
-    files = st.file_uploader(
+    uploaded_files = st.file_uploader(
         "Upload Files", type=["png", "jpg", "jpeg", "pdf"], accept_multiple_files=True
     )
 
-    # Get the file uploaded order (store names)
-    uploaded_files = []
-    for file in files:
-        uploaded_files.append(file.name)
+    if uploaded_files:
+        if len(uploaded_files) > 10:
+            st.error("Maximum is 10 files.")
+        else:
 
-    # Look for none PDFs and convert using original file names provided
-    for file in files:
-        if file.type != 'application/pdf':
-            col1, col2 = st.columns([4,1])
-            with col1: 
-                st.write(file.name)
-            with col2:
-                if st.button(f"Convert {file.name}", key=f"convert_{file.name}"):
+            # files that may need to be converted into pdfs before doing merge operations
+            processed_files = []
+            A4_WIDTH = 2480
+            A4_HEIGHT = 3508
+
+            # Look for none PDFs and convert using original file names provided
+            for file in uploaded_files:
+                if file.type != 'application/pdf':
+                    #print(f"Converted {file.name}")
                     image = Image.open(file).convert("RGB")
+                    a4_canvas = Image.new("RGB", (A4_WIDTH, A4_HEIGHT), "white")
+                    image = ImageOps.contain(image, (A4_WIDTH, A4_HEIGHT))
+                    offset = ((A4_WIDTH - image.width) // 2, (A4_HEIGHT - image.height) // 2)
+                    a4_canvas.paste(image, offset)
+
                     pdf_bytes = BytesIO()
-                    image.save(pdf_bytes, format="PDF")
+                    a4_canvas.save(pdf_bytes, format="PDF")
                     pdf_bytes.seek(0)
-                    st.download_button("Download PDF", pdf_bytes, file.name + ".pdf", mime="application/pdf")    
+                    processed_files.append((file.name.split(".")[0] + ".pdf", pdf_bytes))
+                else:
+                    #print(f"Didn't need to convert {file.name}")
+                    pdf_bytes = BytesIO(file.read())
+                    processed_files.append((file.name, pdf_bytes))
+            
+            #print(processed_files)
+
+            filenames = []
+            for record in processed_files:
+                filenames.append(record[0])
+
+
+            st.subheader("Drag to reorder PDFs")
+            if filenames:
+                sort_key = f"tab3_sort_{len(filenames)}_{hash(tuple(filenames))}"
+                sorted_names_t3 = sort_items(filenames, custom_style=custom_style, direction="horizontal", key=sort_key)
+
+            ordered = []
+
+            for name in sorted_names_t3:
+                for file in processed_files:
+                    if file[0] == name:
+                        ordered.append(file)
+                        break
+                        
+            if st.button("Merge1"):
+                merger = PdfMerger()
+                for f in ordered:
+                    merger.append(f[1])
+                out = BytesIO()
+                merger.write(out)
+                merger.close()
+                out.seek(0)
+                st.success("Merged!")
+                st.download_button("Download Merged PDF", out, "merged.pdf", "application/pdf")
+
             
 
     # If a single file is provided
@@ -135,8 +183,6 @@ with tab3:
         # file.type == 'application/pdf'
 
 
-
-
 with tab4:
     ##=== Bugs to fix ===##
     """
@@ -145,5 +191,9 @@ with tab4:
     1. uploading multiple of the same file results in a duplicate name issue,
     they will need different key values, not sure how to handle this issue. 
 
-    2. 
+    2. image quality of upload is not great
+
+    3. how to deal with different paper sizes being uploaded?
+
+    4. drag to reorder is hiden until files are uploaded.
     """
