@@ -25,22 +25,29 @@ def merge(sorted_names):
     merger.close()
     out.seek(0)
 
+
+
     if len(ordered) <= 1:
         label = "Download PDF"
     else:
         label = "Merge and Download PDF"
 
+    if mobile():
+        file_name = st.text_input("Save as", value="merged") + ".pdf"
+    else:
+        file_name = "merged.pdf"
+
     if ordered:
         st.download_button(
             label=label,
             data=out,
-            file_name="merged.pdf",
+            file_name=file_name,
             mime="application/pdf"
         )
 
     return None
     
-def user_agent_detection():
+def mobile():
 
     user_agent = st_javascript("navigator.userAgent")
     if user_agent:
