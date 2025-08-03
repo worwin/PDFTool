@@ -92,7 +92,7 @@ custom_style = """
 with tab1: 
 
 
-    mobile = mobile()
+    m = mobile()
     
     uploaded_files = st.file_uploader(
         "Upload Files", type=["png", "jpg", "jpeg", "pdf"], accept_multiple_files=True
