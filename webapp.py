@@ -7,7 +7,7 @@ from PIL import ImageOps
 import img2pdf
 from streamlit_javascript import st_javascript
 
-def merge(sorted_names):
+def merge(sorted_names, mobile):
 
     ordered = []
 
@@ -32,7 +32,7 @@ def merge(sorted_names):
     else:
         label = "Merge and Download PDF"
 
-    if mobile():
+    if mobile: #build logit to detect if .pdf was put in or not and account for that
         file_name = st.text_input("Save as", value="merged") + ".pdf"
     else:
         file_name = "merged.pdf"
@@ -47,20 +47,22 @@ def merge(sorted_names):
 
     return None
     
-def mobile():
+def is_mobile():
 
     user_agent = st_javascript("navigator.userAgent")
     if user_agent:
         if "Mobile" in user_agent or "Android" in user_agent or "iPhone" in user_agent:
-            mobile = True
             st.write("You're using a phone.")
+            return True
         else:
-            mobile = False
             st.write("Not a phone.")
+            return False
 
-    return mobile
+    return False
 
 st.set_page_config(page_title="PDF Merger", layout="centered")
+
+mobile = is_mobile()
 
 tab1, tab2, = st.tabs(["Main", "Dev/Bugs"])
 
@@ -90,9 +92,6 @@ custom_style = """
 
 # Tab 1: Working on a single page to handle this
 with tab1: 
-
-
-    m = mobile()
     
     uploaded_files = st.file_uploader(
         "Upload Files", type=["png", "jpg", "jpeg", "pdf"], accept_multiple_files=True
@@ -146,9 +145,9 @@ with tab1:
                 if filenames:
                     sort_key = f"tab_sort_{len(filenames)}_{hash(tuple(filenames))}"
                     sorted_names = sort_items(filenames, custom_style=custom_style, direction="horizontal", key=sort_key)
-                merge(sorted_names)
+                merge(sorted_names, mobile)
             else:
-                merge(filenames)
+                merge(filenames, mobile)
 
     # If a single file is provided
         # give download option for file
