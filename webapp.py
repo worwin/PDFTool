@@ -5,6 +5,53 @@ from streamlit_sortables import sort_items
 from PIL import Image
 from PIL import ImageOps
 import img2pdf
+from streamlit_javascript import st_javascript
+
+def merge(sorted_names):
+
+    ordered = []
+
+    for name in sorted_names:
+        for file in processed_files:
+            if file[0] == name:
+                ordered.append(file)
+                break
+
+    merger = PdfMerger()
+    for file in ordered:
+        merger.append(file[1])
+    out = BytesIO()
+    merger.write(out)
+    merger.close()
+    out.seek(0)
+
+    if len(ordered) <= 1:
+        label = "Download PDF"
+    else:
+        label = "Merge and Download PDF"
+
+    if ordered:
+        st.download_button(
+            label=label,
+            data=out,
+            file_name="merged.pdf",
+            mime="application/pdf"
+        )
+
+    return None
+    
+def user_agent_detection():
+
+    user_agent = st_javascript("navigator.userAgent")
+    if user_agent:
+        if "Mobile" in user_agent or "Android" in user_agent or "iPhone" in user_agent:
+            mobile = True
+            st.write("You're using a phone.")
+        else:
+            mobile = False
+            st.write("Not a phone.")
+
+    return mobile
 
 st.set_page_config(page_title="PDF Merger", layout="centered")
 
@@ -37,6 +84,9 @@ custom_style = """
 # Tab 1: Working on a single page to handle this
 with tab1: 
 
+
+    mobile = user_agent_detection()
+    
     uploaded_files = st.file_uploader(
         "Upload Files", type=["png", "jpg", "jpeg", "pdf"], accept_multiple_files=True
     )
@@ -84,31 +134,14 @@ with tab1:
             for record in processed_files:
                 filenames.append(record[0])
 
-            st.subheader("Drag to reorder PDFs")
-            if filenames:
-                sort_key = f"tab3_sort_{len(filenames)}_{hash(tuple(filenames))}"
-                sorted_names_t3 = sort_items(filenames, custom_style=custom_style, direction="horizontal", key=sort_key)
-
-            ordered = []
-
-            for name in sorted_names_t3:
-                for file in processed_files:
-                    if file[0] == name:
-                        ordered.append(file)
-                        break
-                        
-            if st.button("Merge1"):
-                merger = PdfMerger()
-                for f in ordered:
-                    merger.append(f[1])
-                out = BytesIO()
-                merger.write(out)
-                merger.close()
-                out.seek(0)
-                st.success("Merged!")
-                st.download_button("Download Merged PDF", out, "merged.pdf", "application/pdf")
-
-            
+            if len(processed_files) > 1:
+                st.subheader("Drag to Reorder PDFs")
+                if filenames:
+                    sort_key = f"tab_sort_{len(filenames)}_{hash(tuple(filenames))}"
+                    sorted_names = sort_items(filenames, custom_style=custom_style, direction="horizontal", key=sort_key)
+                merge(sorted_names)
+            else:
+                merge(filenames)
 
     # If a single file is provided
         # give download option for file
@@ -135,10 +168,31 @@ with tab2:
 
     2. [resolved] image quality of upload is not great
 
-    3. how to deal with different paper sizes being uploaded?
+    3. [resolved] how to deal with different paper sizes being uploaded?
 
     4. [resolved] drag to reorder is hiden until files are uploaded.
 
-    5. Fix issue where it does everything as A4. Maybe a selection of page size?
+    5. [resolged] Fix issue where it does everything as A4. Maybe a selection of page size?
        Or it recognizes other page sizes? idk.
+    
+    6. [resolved] If only a single file is upload, have button say Download. Right now, if a single file
+       needs to be uploaded and converted it still shows merge and reordering. Maybe
+       figure out how to activate this once two files have been done.
+
+    7. Look at how to rotate images if needed, but this also implies that we need to 
+       be able to see them. This is where streamlit might have limitations.
+    
+    8. Some issue where a rotated image will still show in it's original format.
+       Not sure thats a big on my end but kinda interesting it is happening.
+    
+    9. [resolved] Have Merge Button simply just download. No Merge then seperate download.
+       Keep this streamlined. 
+
+    10. [resolved] From (9) check and see when resolving (6) if this causes issues. 
+
+    11. Detect what device they are connecting from. If phone, give the option to 
+        name the file before downloading. Otherwise, return as merged.pdf.
+
+    12. 
+
     """
