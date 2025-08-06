@@ -3,14 +3,65 @@ from PyPDF2 import PdfMerger
 from io import BytesIO
 from streamlit_sortables import sort_items
 from PIL import Image
-from PIL import ImageOps
 import img2pdf
 from streamlit_javascript import st_javascript
+import streamlit.components.v1 as components
+import base64
+from datetime import datetime
 
-def merge(sorted_names, mobile):
+def check_session():
 
+    if "user_agent" not in st.session_state:
+        st.session_state.user_agent = None
+    
+    if "mobile" not in st.session_state:
+        st.session_state.mobile = None
+
+    # checks for user_agent data
+    if st.session_state.user_agent == None:
+        print("Getting User Agent Data")
+        get_user_agent()
+
+    # check for mobile (Depednet on user_agent)
+    if st.session_state.mobile == None and st.session_state.user_agent != None:
+        print("Getting Mobile Data")
+        get_mobile()
+
+    print(f"Check Session -> user_agent: {st.session_state.user_agent}")
+    print(f"Check Session -> mobile: {st.session_state.mobile}")
+
+def get_user_agent():
+    data = st_javascript("navigator.userAgent")
+    if data and data != 0:
+        st.session_state.user_agent = data
+        st.rerun()
+    
+
+def get_mobile():
+
+    if st.session_state.user_agent:
+        if "Mobile" in st.session_state.user_agent or "Android" in st.session_state.user_agent or "iPhone" in st.session_state.user_agent:
+            st.session_state.mobile = True
+        else:
+            st.session_state.mobile = False
+
+def js_download_button(buffer, filename):
+    b64 = base64.b64encode(buffer.getvalue()).decode()
+    payload = f"data:application/pdf;base64,{b64}"
+    custom_html = f"""
+    <html>
+        <body>
+            <a download="{filename}" id="download-link" href="{payload}" style="display:none;"></a>
+            <script>
+                document.getElementById("download-link").click();
+            </script>
+        </body>
+    </html>
+    """
+    components.html(custom_html, height=0, width=0)
+
+def merge(sorted_names, file_name):
     ordered = []
-
     for name in sorted_names:
         for file in processed_files:
             if file[0] == name:
@@ -20,49 +71,14 @@ def merge(sorted_names, mobile):
     merger = PdfMerger()
     for file in ordered:
         merger.append(file[1])
+
     out = BytesIO()
     merger.write(out)
     merger.close()
     out.seek(0)
-
-
-
-    if len(ordered) <= 1:
-        label = "Download PDF"
-    else:
-        label = "Merge and Download PDF"
-
-    if mobile: #build logit to detect if .pdf was put in or not and account for that
-        file_name = st.text_input("Save as", value="merged") + ".pdf"
-    else:
-        file_name = "merged.pdf"
-
-    if ordered:
-        st.download_button(
-            label=label,
-            data=out,
-            file_name=file_name,
-            mime="application/pdf"
-        )
-
-    return None
-    
-def is_mobile():
-
-    user_agent = st_javascript("navigator.userAgent")
-    if user_agent:
-        if "Mobile" in user_agent or "Android" in user_agent or "iPhone" in user_agent:
-            st.write("You're using a phone.")
-            return True
-        else:
-            st.write("Not a phone.")
-            return False
-
-    return False
+    return out
 
 st.set_page_config(page_title="PDF Merger", layout="centered")
-
-mobile = is_mobile()
 
 tab1, tab2, = st.tabs(["Main", "Dev/Bugs"])
 
@@ -93,6 +109,8 @@ custom_style = """
 # Tab 1: Working on a single page to handle this
 with tab1: 
     
+    check_session()
+
     uploaded_files = st.file_uploader(
         "Upload Files", type=["png", "jpg", "jpeg", "pdf"], accept_multiple_files=True
     )
@@ -101,7 +119,6 @@ with tab1:
         if len(uploaded_files) > 10:
             st.error("Maximum is 10 files.")
         else:
-
             page_size = st.selectbox("Page Size", ["A4", "Letter"])
 
             if page_size == "A4":
@@ -140,14 +157,25 @@ with tab1:
             for record in processed_files:
                 filenames.append(record[0])
 
+            if st.session_state.mobile:
+                file_name = st.text_input("Save as", value="merged")
+            else:
+                file_name = f"merged_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+
+            if not file_name.lower().endswith(".pdf"):
+                file_name += ".pdf"
+
             if len(processed_files) > 1:
                 st.subheader("Drag to Reorder PDFs")
                 if filenames:
                     sort_key = f"tab_sort_{len(filenames)}_{hash(tuple(filenames))}"
                     sorted_names = sort_items(filenames, custom_style=custom_style, direction="horizontal", key=sort_key)
-                merge(sorted_names, mobile)
             else:
-                merge(filenames, mobile)
+                sorted_names = filenames
+
+            if st.button("Download PDF"):
+                merged_pdf = merge(sorted_names, processed_files)
+                js_download_button(merged_pdf, file_name)
 
     # If a single file is provided
         # give download option for file
@@ -199,6 +227,9 @@ with tab2:
     11. Detect what device they are connecting from. If phone, give the option to 
         name the file before downloading. Otherwise, return as merged.pdf.
 
-    12. 
+    12. Over modularization of merge is causing issues with everything. A bit of a paradox.
+        I want the ability to select the name it will be saved as once they click the download 
+        button. However, because this is in merge, it doesn't work. it has to be moved outside
+        of merge (chatgpt says at least) 
 
     """
