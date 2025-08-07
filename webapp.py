@@ -49,12 +49,21 @@ def get_user_agent():
 
 def merge(sorted_names):
     if DEBUG: print("Merge was called")
+
+    if "processed_files" not in st.sesssion_state:
+        st.error("No files to merge.")
+        return
+
     ordered = []
     for name in sorted_names:
-        for file in processed_files:
+        for file in st.session_state["processed_files"]:
             if file[0] == name:
                 ordered.append(file)
                 break
+
+    if not ordered:
+        st.error("No ordered files found.")
+        return
 
     merger = PdfMerger()
     for file in ordered:
@@ -68,13 +77,12 @@ def merge(sorted_names):
     label = "Download PDF" if len(ordered) <= 1 else "Merge and Download PDF"
     file_name = f"merged_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
 
-    if ordered:
-            st.download_button(
-                label=label,
-                data=out,
-                file_name=file_name,
-                mime="application/pdf"
-            )
+    st.download_button(
+        label=label,
+        data=out,
+        file_name=file_name,
+        mime="application/pdf"
+    )
 
 
 st.set_page_config(page_title="PDF Merger", layout="centered")
@@ -161,6 +169,8 @@ with tab1:
                 else:
                     pdf_bytes = BytesIO(file.read())
                     processed_files.append((file.name, pdf_bytes))
+
+            st.session_state["processed_files"] = processed_files # testing
             
             filenames = []
             for record in processed_files:
