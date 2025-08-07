@@ -47,7 +47,7 @@ def get_user_agent():
         st.session_state.user_agent = data
         st.rerun()
 
-def merge(sorted_names, file_name):
+def merge(sorted_names):
     if DEBUG: print("Merge was called")
     ordered = []
     for name in sorted_names:
@@ -68,7 +68,7 @@ def merge(sorted_names, file_name):
 
 st.set_page_config(page_title="PDF Merger", layout="centered")
 
-tab1, tab2 = st.tabs(["Main", "Dev"])
+tab1, tab2 = st.tabs(["Main", "Dev v0.0.1"])
 
 custom_style = """
 .sortable-component {
@@ -161,7 +161,11 @@ with tab1:
                 st.subheader("Drag to Reorder PDFs")
                 if filenames:
                     sort_key = f"tab_sort_{len(filenames)}_{hash(tuple(filenames))}"
-                    sorted_names = sort_items(filenames, custom_style=custom_style, direction="horizontal", key=sort_key)
+                    if st.session_state.mobile: 
+                        direction = "vertical"
+                    else: 
+                        direction = "horizontal"
+                    sorted_names = sort_items(filenames, custom_style=custom_style, direction=direction, key=sort_key)
             else:
                 sorted_names = filenames
 
@@ -169,7 +173,7 @@ with tab1:
 
             st.download_button(
                 label=label,
-                data=merge(sorted_names, processed_files),
+                data=merge(sorted_names),
                 file_name=file_name,
                 mime="application/pdf"
             )
