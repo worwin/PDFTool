@@ -68,7 +68,7 @@ def merge(sorted_names, file_name):
 
 st.set_page_config(page_title="PDF Merger", layout="centered")
 
-tab1, = st.tabs(["Main"])
+tab1, tab2 = st.tabs(["Main", "Dev"])
 
 custom_style = """
 .sortable-component {
@@ -173,3 +173,8 @@ with tab1:
                 file_name=file_name,
                 mime="application/pdf"
             )
+
+with tab2:
+    '''
+    Developer Information
+    '''
