@@ -107,12 +107,22 @@ with tab1:
         if len(uploaded_files) > 10:
             st.error("Maximum is 10 files.")
         else:
-            page_size = st.selectbox("Page Size", ["A4", "Letter"])
+            page_size = st.selectbox("Page Size", ["A4", "Letter", "Legal", "A5", "A3", "B5", "Tabloid"])
 
-            if page_size == "A4":
+            if page_size == "A4": # Standard International
                 layout = img2pdf.get_layout_fun((img2pdf.mm_to_pt(210), img2pdf.mm_to_pt(297)))
-            elif page_size == "Letter":
+            elif page_size == "Letter": # Standard US Size
                 layout = img2pdf.get_layout_fun((img2pdf.in_to_pt(8.5), img2pdf.in_to_pt(11)))
+            elif page_size == "Legal": # US Legal Documents
+                layout = img2pdf.get_layout_fun((img2pdf.mm_to_pt(216), img2pdf.mm_to_pt(356)))
+            elif page_size == "A5": # Small Booklets, Notepads
+                layout = img2pdf.get_layout_fun((img2pdf.mm_to_pt(148), img2pdf.mm_to_pt(210)))
+            elif page_size == "A3": # Large Documents, Charts
+                layout = img2pdf.get_layout_fun((img2pdf.mm_to_pt(297), img2pdf.mm_to_pt(420)))
+            elif page_size == "B5": # Books, Journals
+                layout = img2pdf.get_layout_fun((img2pdf.mm_to_pt(176), img2pdf.mm_to_pt(250)))
+            elif page_size == "Tabloid": # Newsapers, Posters
+                layout = img2pdf.get_layout_fun((img2pdf.mm_to_pt(279), img2pdf.mm_to_pt(432)))
 
             # files that may need to be converted into pdfs before doing merge operations
             processed_files = []
