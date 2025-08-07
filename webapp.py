@@ -60,6 +60,22 @@ def js_download_button(buffer, filename):
     """
     components.html(custom_html, height=0, width=0)
 
+def js_open_pdf_in_new_tab(buffer, filename):
+    b64 = base64.b64encode(buffer.getvalue()).decode()
+    payload = f"data:application/pdf;base64,{b64}"
+    custom_html = f"""
+    <html>
+        <body>
+            <a href="{payload}" target="_blank" id="open-link" style="display:none;">Open</a>
+            <script>
+                document.getElementById("open-link").click();
+            </script>
+        </body>
+    </html>
+    """
+    components.html(custom_html, height=0, width=0)
+    
+
 def merge(sorted_names, file_name):
     ordered = []
     for name in sorted_names:
@@ -158,7 +174,7 @@ with tab1:
                 filenames.append(record[0])
 
             if st.session_state.mobile:
-                file_name = st.text_input("Save as", value="merged")
+                file_name = f"merged_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
             else:
                 file_name = f"merged_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
 
@@ -175,7 +191,11 @@ with tab1:
 
             if st.button("Download PDF"):
                 merged_pdf = merge(sorted_names, processed_files)
-                js_download_button(merged_pdf, file_name)
+
+                if st.session_state.mobile:
+                    js_open_pdf_in_new_tab(merged_pdf, file_name)
+                else:
+                    js_download_button(merged_pdf, file_name)
 
     # If a single file is provided
         # give download option for file
@@ -232,4 +252,7 @@ with tab2:
         button. However, because this is in merge, it doesn't work. it has to be moved outside
         of merge (chatgpt says at least) 
 
+    13. Issues on ios devices, need to maybe use a <a> link? Better Yet, let it open it in a new
+        tab then they can just save it or do w/e. 
+        
     """
