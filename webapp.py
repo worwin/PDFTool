@@ -68,7 +68,7 @@ def merge(sorted_names, file_name):
 
 st.set_page_config(page_title="PDF Merger", layout="centered")
 
-tab1, tab2, = st.tabs(["Main", "Dev/Bugs"])
+tab1 = st.tabs(["Main"])
 
 custom_style = """
 .sortable-component {
@@ -173,56 +173,3 @@ with tab1:
                 file_name=file_name,
                 mime="application/pdf"
             )
-
-    # If a single file is provided
-        # give download option for file
-
-    # If multiple files are provided
-        # Maintain original upload order and provide a sorting mechanism
-
-        # Allow for merging into a single pdf (if a single pdf is provided)
-
-    #for file in files:
-    #    print(file)
-
-        # file.type == 'image/png' or 'image/jpg' or 'image/jpeg'
-        # file.type == 'application/pdf'
-
-
-with tab2:
-    ##=== Bugs to fix ===##
-    """
-    Bug Issues
-
-    1. [resolved] uploading multiple of the same file results in a duplicate name issue,
-    they will need different key values, not sure how to handle this issue. 
-
-    2. [resolved] image quality of upload is not great
-
-    3. [resolved] how to deal with different paper sizes being uploaded?
-
-    4. [resolved] drag to reorder is hiden until files are uploaded.
-
-    5. [resolged] Fix issue where it does everything as A4. Maybe a selection of page size?
-       Or it recognizes other page sizes? idk.
-    
-    6. [resolved] If only a single file is upload, have button say Download. Right now, if a single file
-       needs to be uploaded and converted it still shows merge and reordering. Maybe
-       figure out how to activate this once two files have been done.
-
-    7. Look at how to rotate images if needed, but this also implies that we need to 
-       be able to see them. This is where streamlit might have limitations.
-    
-    8. Some issue where a rotated image will still show in it's original format.
-       Not sure thats a big on my end but kinda interesting it is happening.
-    
-    9. [resolved] Have Merge Button simply just download. No Merge then seperate download.
-       Keep this streamlined. 
-
-    10. [resolved] From (9) check and see when resolving (6) if this causes issues. 
-
-    11. [unresolved] Detect what device they are connecting from. If phone, give the option to 
-        name the file before downloading. Otherwise, return as merged.pdf. - Issues with how
-        iOS handles this making it difficult, if not impossible with Streamlit.
-        
-    """
