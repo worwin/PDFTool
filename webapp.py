@@ -79,7 +79,7 @@ def merge(sorted_names):
 
 st.set_page_config(page_title="PDF Merger", layout="centered")
 
-tab1, tab2 = st.tabs(["Main", "Dev v0.0.1"])
+tab1, tab2 = st.tabs(["Main", "Dev v0.0.2"])
 
 custom_style = """
 .sortable-component {
