@@ -50,7 +50,7 @@ def get_user_agent():
 def merge(sorted_names):
     if DEBUG: print("Merge was called")
 
-    if "processed_files" not in st.sesssion_state:
+    if "processed_files" not in st.session_state:
         st.error("No files to merge.")
         return
 
