@@ -64,7 +64,24 @@ def merge(sorted_names):
     merger.write(out)
     merger.close()
     out.seek(0)
-    return out
+
+    label = "Download PDF" if len(ordered) <= 1 else "Merge and Download PDF"
+    file_name = f"merged_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+
+    if ordered:
+        if st.session_state.mobile:
+            # iOS-specific workaround
+            b64 = base64.b64encode(out.getvalue()).decode()
+            href = f'<a href="data:application/pdf;base64,{b64}" download="{file_name}">Tap here to download PDF</a>'
+            st.markdown(href, unsafe_allow_html=True)
+        else:
+            st.download_button(
+                label=label,
+                data=out,
+                file_name=file_name,
+                mime="application/pdf"
+            )
+
 
 st.set_page_config(page_title="PDF Merger", layout="centered")
 
@@ -155,8 +172,6 @@ with tab1:
             for record in processed_files:
                 filenames.append(record[0])
 
-            file_name = f"merged_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-
             if len(processed_files) > 1:
                 st.subheader("Drag to Reorder PDFs")
                 if filenames:
@@ -166,17 +181,9 @@ with tab1:
                     else: 
                         direction = "horizontal"
                     sorted_names = sort_items(filenames, custom_style=custom_style, direction=direction, key=sort_key)
+                    merge(sorted_names)
             else:
-                sorted_names = filenames
-
-            label = "Download PDF"
-
-            st.download_button(
-                label=label,
-                data=merge(sorted_names),
-                file_name=file_name,
-                mime="application/pdf"
-            )
+                merge(filenames)
 
 with tab2:
     '''
