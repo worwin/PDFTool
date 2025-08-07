@@ -221,16 +221,8 @@ with tab2:
 
     10. [resolved] From (9) check and see when resolving (6) if this causes issues. 
 
-    11. Detect what device they are connecting from. If phone, give the option to 
-        name the file before downloading. Otherwise, return as merged.pdf.
-
-    12. Over modularization of merge is causing issues with everything. A bit of a paradox.
-        I want the ability to select the name it will be saved as once they click the download 
-        button. However, because this is in merge, it doesn't work. it has to be moved outside
-        of merge (chatgpt says at least) 
-
-    13. [unresolved] Issues on ios devices, need to maybe use a <a> link? Better Yet, let it open it in a new
-        tab then they can just save it or do w/e. Moving to not do this now. Keep this simple and
-        streamlined with a dated file name. 
+    11. [unresolved] Detect what device they are connecting from. If phone, give the option to 
+        name the file before downloading. Otherwise, return as merged.pdf. - Issues with how
+        iOS handles this making it difficult, if not impossible with Streamlit.
         
     """
