@@ -69,12 +69,6 @@ def merge(sorted_names):
     file_name = f"merged_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
 
     if ordered:
-        if st.session_state.mobile:
-            # iOS-specific workaround
-            b64 = base64.b64encode(out.getvalue()).decode()
-            href = f'<a href="data:application/pdf;base64,{b64}" download="{file_name}">Tap here to download PDF</a>'
-            st.markdown(href, unsafe_allow_html=True)
-        else:
             st.download_button(
                 label=label,
                 data=out,
